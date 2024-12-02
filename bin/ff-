@@ -1,0 +1,2 @@
+#!/bin/bash
+exec env FF_PROFILE="${0##*/}" ff

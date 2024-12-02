@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e -u -o pipefail
+: "${FF_PROFILE:=default}"
+export FF_PROFILE
+case "$FF_PROFILE" in
+	/*) : ;;
+	*) FF_PROFILE="$HOME/ff/$FF_PROFILE" ;;
+esac
+
+mkdir -p "$FF_PROFILE"
+exec firefox --profile "$FF_PROFILE" "$@"
