@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e -u -o pipefail
+: "${FF_PROFILE_DIR:=$HOME/ff}"
 : "${FF_PROFILE:=default}"
-export FF_PROFILE
 case "$FF_PROFILE" in
 	/*) : ;;
-	*) FF_PROFILE="$HOME/ff/$FF_PROFILE" ;;
+	*) FF_PROFILE="$FF_PROFILE_DIR/$FF_PROFILE" ;;
 esac
 
 mkdir -p "$FF_PROFILE"
