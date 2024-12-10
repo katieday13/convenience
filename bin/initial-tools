@@ -1,0 +1,122 @@
+#!/bin/bash
+#shellcheck enable=all
+set -e -u -o pipefail
+case "${EUID}" in
+	0) _s="";;
+	*) _s="sudo";;
+esac
+Main(){
+	local subgroup action actions=()
+	for subgroup in "$@"; do
+		# Shellcheck doesn't like ${subgroup^} magic... so have an explicit case
+		case "${subgroup}" in
+			all) actions+=(Asdf Distro Docker);;
+			*) actions+=("${subgroup^}")
+		esac
+	done
+	for action in "${actions[@]}"; do
+		case "${action}" in
+			Asdf) Asdf;;
+			Distro) Distro;;
+			Docker) Docker;;
+			*) echo "oops ${action}";;
+		esac
+	done
+	exit 0
+}
+Sudo(){
+	${_s:+${_s}} "$@"
+}
+Asdf(){
+	# This is shamelessly Debian specific
+	local line asdf_version='v0.14.1' asdf_pre_reqs=(
+		# asdf
+		'curl'
+		'git'
+		# python from https://github.com/python/cpython/blob/main/.github/workflows/posix-deps-apt.sh
+		'build-essential'
+		'pkg-config'
+		'ccache'
+		'gdb'
+		'lcov'
+		'libb2-dev'
+		'libbz2-dev'
+		'libffi-dev'
+		'libgdbm-dev'
+		'libgdbm-compat-dev'
+		'liblzma-dev'
+		'libncurses5-dev'
+		'libreadline6-dev'
+		'libsqlite3-dev'
+		'libssl-dev'
+		'lzma'
+		'lzma-dev'
+		'strace'
+		'tk-dev'
+		'uuid-dev'
+		'xvfb'
+		'zlib1g-dev'
+	) 
+	# shellcheck disable=SC2016
+	local asdf_bashrc_lines=(
+		'. "$HOME/.asdf/asdf.sh"' 
+		'. "$HOME/.asdf/completions/asdf.bash"'
+	)
+	local tool_versions=(
+		'awscli latest'
+		'direnv latest'
+		'github-cli latest'
+		'golang latest'
+		'hadolint latest'
+		'jq latest'
+		'nodejs latest'
+		'nodejs latest:22.'
+		'packer latest'
+		'python latest'
+		'python latest:3.12.'
+		'shellcheck latest'
+		'yq latest'
+		'yt-dlp latest'
+		'zola latest'
+	)
+	Sudo apt-get install -y "${asdf_pre_reqs[@]}"
+	git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch="${asdf_version}" || :
+	(cd ~/.asdf; git checkout -b "${asdf_version}")
+	# Technically unsafe... don't care
+	# shellcheck disable=SC2094
+	for line in "${asdf_bashrc_lines[@]}"; do
+		# shellcheck disable=SC2094
+		grep "^${line}$" "${HOME}/.bashrc" || echo "${line}"
+	done >> "${HOME}/.bashrc"
+	# shellcheck source=/dev/null
+	. ~/.asdf/asdf.sh
+	for line in "${tool_versions[@]}"; do
+		asdf plugin add "${line%% *}"
+		asdf install ${line:+${line}}
+		asdf global ${line:+${line}}
+	done
+}
+Distro(){
+	:
+}
+Docker(){
+	# Again shamelessly debian
+	Sudo apt-get update
+	Sudo apt-get install ca-certificates curl
+	Sudo install -m 0755 -d /etc/apt/keyrings
+	Sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+	Sudo chmod a+r /etc/apt/keyrings/docker.asc
+	local arch release
+	arch=$(dpkg --print-architecture)
+	# shellcheck disable=SC1091,SC2154
+	release=$(. /etc/os-release && echo "${VERSION_CODENAME}")
+	echo \
+		"deb [arch=${arch} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+		${release} stable" | \
+		Sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+	Sudo apt-get update
+	Sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+}
+Main "$@"
+# shellcheck disable=SC2317
+exit 1
