@@ -1,10 +1,14 @@
 #!/bin/bash
 #shellcheck enable=all
 set -e -u -o pipefail
+set -x
 case "${EUID}" in
 	0) _s="";;
 	*) _s="sudo";;
 esac
+arch=$(dpkg --print-architecture)
+# shellcheck disable=SC1091,SC2154
+release=$(. /etc/os-release && echo "${DEBIAN_CODENAME:-$VERSION_CODENAME}")
 Main(){
 	local subgroup action actions=()
 	for subgroup in "$@"; do
@@ -109,10 +113,6 @@ Docker(){
 	Sudo install -m 0755 -d /etc/apt/keyrings
 	Sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 	Sudo chmod a+r /etc/apt/keyrings/docker.asc
-	local arch release
-	arch=$(dpkg --print-architecture)
-	# shellcheck disable=SC1091,SC2154
-	release=$(. /etc/os-release && echo "${DEBIAN_CODENAME:-$VERSION_CODENAME}")
 	echo \
 		"deb [arch=${arch} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
 		${release} stable" | \
@@ -129,9 +129,6 @@ VSCode(){
 Vagrant(){
 	sudo -v
 	wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-	arch=$(dpkg --print-architecture)
-	# shellcheck disable=SC1091,SC2154
-	release=$(. /etc/os-release && echo "${DEBIAN_CODENAME:-$VERSION_CODENAME}")
 	echo "deb [arch=$arch signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $release main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 	sudo apt update && sudo apt install vagrant
 }
