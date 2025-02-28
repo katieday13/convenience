@@ -8,13 +8,14 @@ case "${EUID}" in
 esac
 arch=$(dpkg --print-architecture)
 # shellcheck disable=SC1091,SC2154
-release=$(. /etc/os-release && echo "${DEBIAN_CODENAME:-$VERSION_CODENAME}")
+release=$(. /etc/os-release && echo "${DEBIAN_CODENAME:-${VERSION_CODENAME}}")
+all_actions=()
 Main(){
 	local subgroup action actions=()
 	for subgroup in "$@"; do
 		# Shellcheck doesn't like ${subgroup^} magic... so have an explicit case
 		case "${subgroup}" in
-			all) actions+=(Asdf Distro Docker);;
+			all) actions+=("${all_actions[@]}");;
 			*) actions+=("${subgroup^}")
 		esac
 	done
@@ -25,6 +26,7 @@ Main(){
 			Docker) Docker;;
 			VSCode) VSCode;;
 			Vagrant) Vagrant;;
+			VirtualBox) VirtualBox;;
 			*) echo "oops ${action}";;
 		esac
 	done
@@ -33,6 +35,7 @@ Main(){
 Sudo(){
 	${_s:+${_s}} "$@"
 }
+all_actions+=(Asdf)
 Asdf(){
 	# This is shamelessly Debian specific
 	local line asdf_version='v0.14.1' asdf_pre_reqs=(
@@ -102,9 +105,19 @@ Asdf(){
 		asdf global ${line:+${line}}
 	done
 }
+all_actions+=(Distro)
 Distro(){
-	:
+	Sudo apt-get update
+	Sudo apt-get install -y pass pwgen tomb
+	PassUpdate
 }
+PassUpdate(){
+	mkdir -p ~/gh
+	rm -rf ~/gh/pass-update
+	git clone https://github.com/roddhjav/pass-update/ ~/gh/pass-update
+	(cd ~/gh/pass-update; Sudo make install)
+}
+all_actions+=(Docker)
 Docker(){
 	# Again shamelessly debian
 	Sudo rm -f /etc/apt/sources.list.d/docker.list
@@ -119,18 +132,30 @@ Docker(){
 		Sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 	Sudo apt-get update
 	Sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-	Sudo adduser "$LOGNAME" docker
+	Sudo adduser "${LOGNAME}" docker
 }
 
+all_actions+=(VSCode)
 VSCode(){
 	curl -L -o /tmp/vscode.deb 'https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64'
 	Sudo apt-get install -y /tmp/vscode.deb
 }
+
+all_actions+=(Vagrant)
 Vagrant(){
-	sudo -v
-	wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-	echo "deb [arch=$arch signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $release main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-	sudo apt update && sudo apt install vagrant
+	VirtualBox
+	wget -O - https://apt.releases.hashicorp.com/gpg |
+		Sudo gpg --dearmor --batch --yes -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+	echo "deb [arch=${arch} signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com ${release} main" | Sudo tee /etc/apt/sources.list.d/hashicorp.list
+	Sudo apt update
+	Sudo apt install vagrant
+}
+
+# Implicit from Vagrant
+# all_actions+=(Virtualbox)
+VirtualBox(){
+	curl -L -o /tmp/virtualbox.deb 'https://download.virtualbox.org/virtualbox/7.1.6/virtualbox-7.1_7.1.6-167084~Debian~bookworm_amd64.deb'
+	Sudo apt-get install -y /tmp/virtualbox.deb
 }
 Main "$@"
 # shellcheck disable=SC2317
