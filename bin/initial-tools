@@ -24,6 +24,7 @@ Main(){
 			Asdf) Asdf;;
 			Distro) Distro;;
 			Docker) Docker;;
+			Remote) Remote;;
 			VSCode) VSCode;;
 			Vagrant) Vagrant;;
 			VirtualBox) VirtualBox;;
@@ -147,8 +148,8 @@ Vagrant(){
 	wget -O - https://apt.releases.hashicorp.com/gpg |
 		Sudo gpg --dearmor --batch --yes -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
 	echo "deb [arch=${arch} signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com ${release} main" | Sudo tee /etc/apt/sources.list.d/hashicorp.list
-	Sudo apt update
-	Sudo apt install vagrant
+	Sudo apt-get update
+	Sudo apt-get install -y vagrant
 }
 
 # Implicit from Vagrant
@@ -157,6 +158,13 @@ VirtualBox(){
 	curl -L -o /tmp/virtualbox.deb 'https://download.virtualbox.org/virtualbox/7.1.6/virtualbox-7.1_7.1.6-167084~Debian~bookworm_amd64.deb'
 	Sudo apt-get install -y /tmp/virtualbox.deb
 }
+
+all_actions+=(Remote)
+Remote(){
+	Sudo apt-get update
+	Sudo apt-get install -y fwknop-server fwknop-client wireguard wireguard-tools openssh-server
+}
+
 Main "$@"
 # shellcheck disable=SC2317
 exit 1
