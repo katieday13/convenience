@@ -90,7 +90,7 @@ Asdf(){
 	)
 	Sudo apt-get install -y "${asdf_pre_reqs[@]}"
 	git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch="${asdf_version}" || :
-	(cd ~/.asdf; git checkout -b "${asdf_version}")
+	(cd ~/.asdf; git checkout -b "${asdf_version}" || :) 
 	# Technically unsafe... don't care
 	# shellcheck disable=SC2094
 	for line in "${asdf_bashrc_lines[@]}"; do
