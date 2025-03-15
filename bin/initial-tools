@@ -122,7 +122,7 @@ Docker(){
 	# Again shamelessly debian
 	Sudo rm -f /etc/apt/sources.list.d/docker.list
 	Sudo apt-get update
-	Sudo apt-get install ca-certificates curl
+	Sudo apt-get install -y ca-certificates curl
 	Sudo install -m 0755 -d /etc/apt/keyrings
 	Sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 	Sudo chmod a+r /etc/apt/keyrings/docker.asc
@@ -131,7 +131,7 @@ Docker(){
 		${release} stable" | \
 		Sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 	Sudo apt-get update
-	Sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+	Sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 	Sudo adduser "${LOGNAME}" docker
 }
 
