@@ -6,6 +6,8 @@ case "${EUID}" in
 	0) _s="";;
 	*) _s="sudo";;
 esac
+zerodir="${0%/*}"
+confdir="${zerodir}/../conf"
 arch=$(dpkg --print-architecture)
 # shellcheck disable=SC1091,SC2154
 release=$(. /etc/os-release && echo "${DEBIAN_CODENAME:-${VERSION_CODENAME}}")
@@ -25,6 +27,7 @@ Main(){
 			Distro) Distro;;
 			Docker) Docker;;
 			Remote) Remote;;
+			Uremote) Uremote;;
 			VSCode) VSCode;;
 			Vagrant) Vagrant;;
 			VirtualBox) VirtualBox;;
@@ -163,6 +166,34 @@ all_actions+=(Remote)
 Remote(){
 	Sudo apt-get update
 	Sudo apt-get install -y fwknop-server fwknop-client wireguard wireguard-tools openssh-server
+	Sudo ufw default deny incoming
+	Sudo ufw default allow outgoing
+	Sudo ufw enable
+	Fwknopd
+}
+
+Fwknopd() {
+	local d=/etc/fwknop conf
+	local confs=(access.conf fwknopd.conf)
+	Sudo mkdir -p "${d}/access.conf.d"
+	for conf in "${confs[@]}"; do
+		if [[ ! -r "${d}/${conf}.orig" ]]; then
+			Sudo mv -v "${d}/${conf}" "${d}/${conf}.orig"
+		fi
+		Sudo install -m 0600 "${confdir}/${conf}" "${d}/${conf}"
+	done
+	FwknopdConf | Sudo tee /etc/fwknop/fwknopd.conf
+	# Sudo /usr/sbin/fwknopd -f
+}
+
+FwknopdConf() {
+	ip route show default | awk '{print "PCAP_INTF", $5 ";" }'
+}
+
+Uremote() {
+	Sudo ufw default allow incoming
+	Sudo ufw default allow outgoing
+	Sudo ufw enable
 }
 
 Main "$@"
