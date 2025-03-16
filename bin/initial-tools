@@ -183,11 +183,13 @@ Fwknopd() {
 		Sudo install -m 0600 "${confdir}/${conf}" "${d}/${conf}"
 	done
 	FwknopdConf | Sudo tee /etc/fwknop/fwknopd.conf
+	Sudo systemctl restart fwknop-server.service
 	# Sudo /usr/sbin/fwknopd -f
 }
 
 FwknopdConf() {
 	ip route show default | awk '{print "PCAP_INTF", $5 ";" }'
+	echo "PCAP_FILTER udp dst portrange 62000-65535"
 }
 
 Uremote() {
