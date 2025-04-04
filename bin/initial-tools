@@ -26,6 +26,7 @@ Main(){
 			Asdf) Asdf;;
 			Distro) Distro;;
 			Docker) Docker;;
+			Paperless) Paperless;;
 			Remote) Remote;;
 			Uremote) Uremote;;
 			VSCode) VSCode;;
@@ -112,14 +113,18 @@ Asdf(){
 all_actions+=(Distro)
 Distro(){
 	Sudo apt-get update
-	Sudo apt-get install -y pass pwgen tomb uptimed
+	Sudo apt-get install -y pandoc pass poppler-utils pwgen tomb uptimed
 	PassUpdate
+	# Brave
 }
 PassUpdate(){
 	mkdir -p ~/gh
 	rm -rf ~/gh/pass-update
 	git clone https://github.com/roddhjav/pass-update/ ~/gh/pass-update
 	(cd ~/gh/pass-update; Sudo make install)
+}
+Brave(){
+	curl -fsS https://dl.brave.com/install.sh | sh
 }
 all_actions+=(Docker)
 Docker(){
@@ -137,6 +142,11 @@ Docker(){
 	Sudo apt-get update
 	Sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 	Sudo adduser "${LOGNAME}" docker
+}
+
+Paperless() {
+	Docker
+	bash -c "$(curl --location --silent --show-error https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/main/install-paperless-ngx.sh)"
 }
 
 all_actions+=(VSCode)
