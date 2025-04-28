@@ -1,0 +1,54 @@
+#!/bin/bash
+set -e -u -o pipefail
+set -x
+zero=$(readlink -f "$0")
+based="${zero%/*}/../ff-profiles"
+script="${0##*/}"
+Main() {
+	case "${script}" in 
+		# profile with base
+		*-*--*)
+			BROWSER_PROFILE_BASE="${script#*--*}" 
+			BROWSER_PROFILE="${script#-*}"
+			;;
+		*--*)
+			echo "Invalid name $script make it look like something[-profile[--base_profile]]"
+			exit 1
+			;;
+		*-*)
+			BROWSER_PROFILE="${zero#*-}"
+			;;
+	esac
+	# We assume firefox and it's in our path
+	: "${BROWSER:=firefox}"
+	# We assume the default profile for that browser install to handle firefox-esr
+	: "${BROWSER_PROFILE:=}"
+	# We assume no custom profile base
+	: "${BROWSER_PROFILE_BASE:=}"
+
+	if [ -n "${BROWSER_PROFILE}" ]; then
+		"${BROWSER}" -CreateProfile "${BROWSER_PROFILE}"
+		if [ -n "${BROWSER_PROFILE_BASE}" ]; then
+			InstallProfileBase "${BROWSER_PROFILE}" "${BROWSER_PROFILE_BASE}"
+		fi
+	fi
+	exec "${BROWSER}" ${BROWSER_PROFILE:+ -P "${BROWSER_PROFILE}"} "$@"
+}
+InstallProfileBase() {
+	local profiledir profile="$1" base="$2"
+	# This is a bad assumption
+	profiledir=$(GetProfileDir ~/.mozilla/firefox "${profile}")
+	if [ "$based/$base.zip" -nt "$profiledir/prefs.js" ]; then
+		unzip -o -d "$profiledir" "$based/$base.zip"
+	fi
+}
+
+GetProfileDir() {
+	local dir="$1" profile="$2" pdir
+	pdir=$(awk -v "profile=${profile}" -F= '
+	$1=="Name"{n=$2}
+	$1=="Path"&&n==profile{print $2; exit}
+	' "$dir/profiles.ini")
+	echo "$dir/$pdir"
+}
+Main "$@"
