@@ -8,7 +8,7 @@ Main() {
 	case "${script}" in 
 		# profile with base
 		*-*--*)
-			BROWSER_PROFILE_BASE="${script#*--*}" 
+			BROWSER_PROFILE_BASE="profile-${script#*--*}" 
 			BROWSER_PROFILE="${script#-*}"
 			;;
 		*--*)
@@ -16,7 +16,7 @@ Main() {
 			exit 1
 			;;
 		*-*)
-			BROWSER_PROFILE="${zero#*-}"
+			BROWSER_PROFILE="${script#*-}"
 			;;
 	esac
 	# We assume firefox and it's in our path
