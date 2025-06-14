@@ -178,7 +178,7 @@ Vagrant(){
 		Sudo gpg --dearmor --batch --yes -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
 	echo "deb [arch=${arch} signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com ${release} main" | Sudo tee /etc/apt/sources.list.d/hashicorp.list
 	Sudo apt-get update
-	Sudo apt-get install -y vagrant
+	Sudo apt-get install -y vagrant libvirt-dev qemu-kvm libvirt-daemon-system
 }
 
 # Implicit from Vagrant
