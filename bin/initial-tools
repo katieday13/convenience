@@ -119,7 +119,9 @@ std_actions+=(Distro)
 actions+=(Distro)
 Distro(){
 	Sudo apt-get update
-	Sudo apt-get install -y pandoc pass poppler-utils pwgen tomb uptimed
+	Sudo apt-get install -y lsscsi pandoc pass poppler-utils pwgen scsitools tomb uptimed uuid vim-nox
+	Sudo update-alternatives --set vim /usr/bin/vim.nox
+	Sudo update-alternatives --set editor /usr/bin/vim.nox
 	PassUpdate
 	# Brave
 }
@@ -165,7 +167,7 @@ Pin: origin packages.mozilla.org
 Pin-Priority: 1000
 ' | Sudo tee /etc/apt/preferences.d/mozilla 
 	Sudo apt-get update
-	Sudo apt-get install firefox firefox-esr
+	Sudo apt-get install -y firefox firefox-esr
 
 }
 
