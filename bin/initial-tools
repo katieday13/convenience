@@ -11,13 +11,14 @@ confdir="${zerodir}/../conf"
 arch=$(dpkg --print-architecture)
 # shellcheck disable=SC1091,SC2154
 release=$(. /etc/os-release && echo "${DEBIAN_CODENAME:-${VERSION_CODENAME}}")
-all_actions=()
+std_actions=()
+actions=()
 Main(){
 	local subgroup action actions=()
 	for subgroup in "$@"; do
 		# Shellcheck doesn't like ${subgroup^} magic... so have an explicit case
 		case "${subgroup}" in
-			all) actions+=("${all_actions[@]}");;
+			std) actions+=("${std_actions[@]}");;
 			*) actions+=("${subgroup^}")
 		esac
 	done
@@ -26,9 +27,12 @@ Main(){
 			Asdf) Asdf;;
 			Distro) Distro;;
 			Docker) Docker;;
+			Brave) Brave;;
 			Firefox) Firefox;;
+			Git) Git;;
 			Paperless) Paperless;;
 			Remote) Remote;;
+			Signal) Signal;;
 			Uremote) Uremote;;
 			VSCode) VSCode;;
 			Vagrant) Vagrant;;
@@ -41,7 +45,8 @@ Main(){
 Sudo(){
 	${_s:+${_s}} "$@"
 }
-all_actions+=(Asdf)
+std_actions+=(Asdf)
+actions+=(Asdf)
 Asdf(){
 	# This is shamelessly Debian specific
 	local line asdf_version='v0.14.1' asdf_pre_reqs=(
@@ -111,10 +116,13 @@ Asdf(){
 		asdf global ${line:+${line}}
 	done
 }
-all_actions+=(Distro)
+std_actions+=(Distro)
+actions+=(Distro)
 Distro(){
 	Sudo apt-get update
-	Sudo apt-get install -y pandoc pass poppler-utils pwgen tomb uptimed
+	Sudo apt-get install -y lsscsi pandoc pass poppler-utils pwgen scsitools tomb uptimed uuid vim-nox
+	Sudo update-alternatives --set vim /usr/bin/vim.nox
+	Sudo update-alternatives --set editor /usr/bin/vim.nox
 	PassUpdate
 	# Brave
 }
@@ -124,10 +132,28 @@ PassUpdate(){
 	git clone https://github.com/roddhjav/pass-update/ ~/gh/pass-update
 	(cd ~/gh/pass-update; Sudo make install)
 }
+actions+=(Brave)
 Brave(){
 	curl -fsS https://dl.brave.com/install.sh | sh
 }
-all_actions+=(Docker)
+
+actions+=(Signal)
+Signal(){
+	# https://signal.org/download/linux/
+	# 1. Install our official public software signing key:
+	wget -O- https://updates.signal.org/desktop/apt/keys.asc | gpg --dearmor |
+	Sudo tee /usr/share/keyrings/signal-desktop-keyring.gpg > /dev/null 
+
+# 2. Add our repository to your list of repositories:
+	echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' |\
+  	Sudo tee /etc/apt/sources.list.d/signal-xenial.list
+
+# 3. Update your package database and install Signal:
+	Sudo apt update
+	Sudo apt install signal-desktop
+}
+std_actions+=(Docker)
+actions+=(Docker)
 Docker(){
 	# Again shamelessly debian
 	Sudo rm -f /etc/apt/sources.list.d/docker.list
@@ -145,7 +171,8 @@ Docker(){
 	Sudo adduser "${LOGNAME}" docker
 }
 
-all_actions+=(Firefox)
+std_actions+=(Firefox)
+actions+=(Firefox)
 Firefox() {
 	Sudo install -d -m 0755 /etc/apt/keyrings
 	wget -q https://packages.mozilla.org/apt/repo-signing-key.gpg -O- | Sudo tee /etc/apt/keyrings/packages.mozilla.org.asc > /dev/null
@@ -156,22 +183,46 @@ Package: *
 Pin: origin packages.mozilla.org
 Pin-Priority: 1000
 ' | Sudo tee /etc/apt/preferences.d/mozilla 
-	Sudo apt-get update && Sudo apt-get install firefox firefox-esr
+	Sudo apt-get update
+	Sudo apt-get install -y firefox firefox-esr
 
 }
 
+actions+=(Paperless)
 Paperless() {
 	Docker
-	bash -c "$(curl --location --silent --show-error https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/main/install-paperless-ngx.sh)"
+	curl --location --silent --show-error -o /tmp/install-paperless-ngx.sh
+	bash /tmp/install-paperless-ngx.sh
+	rm -f /tmp/install-paperless-ngx.sh
+	# bash -c "$(curl --location --silent --show-error https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/main/install-paperless-ngx.sh)"
 }
 
-all_actions+=(VSCode)
+std_actions+=(VSCode)
+actions+=(VSCode)
 VSCode(){
 	curl -L -o /tmp/vscode.deb 'https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64'
 	Sudo apt-get install -y /tmp/vscode.deb
 }
 
-all_actions+=(Vagrant)
+actions+=(Git)
+Git(){
+	local email name
+	git config --global push.autoSetupRemote true
+	if ! git config --get --global init.defaultBranch; then
+		git config --global initdefaultBranch canonical
+	fi
+	if ! git config --get user.email; then
+		read -r -p "What email are you gonna use for git?" email
+		git config --global user.email "${email}"
+	fi
+	if ! git config --get user.name; then
+		read -r -p "What name are you gonna use for git?" name
+		git config --global user.name "${name}"
+	fi
+}
+
+std_actions+=(Vagrant)
+actions+=(Vagrant)
 Vagrant(){
 	VirtualBox
 	wget -O - https://apt.releases.hashicorp.com/gpg |
@@ -182,13 +233,15 @@ Vagrant(){
 }
 
 # Implicit from Vagrant
-# all_actions+=(Virtualbox)
+# std_actions+=(Virtualbox)
+actions+=(Virtualbox)
 VirtualBox(){
 	curl -L -o /tmp/virtualbox.deb 'https://download.virtualbox.org/virtualbox/7.1.6/virtualbox-7.1_7.1.6-167084~Debian~bookworm_amd64.deb'
 	Sudo apt-get install -y /tmp/virtualbox.deb
 }
 
-all_actions+=(Remote)
+std_actions+=(Remote)
+actions+=(Remote)
 Remote(){
 	Sudo apt-get update
 	Sudo apt-get install -y fwknop-server fwknop-client wireguard wireguard-tools openssh-server
