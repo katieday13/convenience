@@ -29,11 +29,12 @@ Main(){
 			Docker) Docker;;
 			Brave) Brave;;
 			Firefox) Firefox;;
+			Git) Git;;
 			Paperless) Paperless;;
 			Remote) Remote;;
+			Signal) Signal;;
 			Uremote) Uremote;;
 			VSCode) VSCode;;
-			Git) Git;;
 			Vagrant) Vagrant;;
 			VirtualBox) VirtualBox;;
 			*) echo "oops ${action}";;
@@ -134,6 +135,22 @@ PassUpdate(){
 actions+=(Brave)
 Brave(){
 	curl -fsS https://dl.brave.com/install.sh | sh
+}
+
+actions+=(Signal)
+Signal(){
+	# https://signal.org/download/linux/
+	# 1. Install our official public software signing key:
+	wget -O- https://updates.signal.org/desktop/apt/keys.asc | gpg --dearmor |
+	Sudo tee /usr/share/keyrings/signal-desktop-keyring.gpg > /dev/null 
+
+# 2. Add our repository to your list of repositories:
+	echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/signal-desktop-keyring.gpg] https://updates.signal.org/desktop/apt xenial main' |\
+  	Sudo tee /etc/apt/sources.list.d/signal-xenial.list
+
+# 3. Update your package database and install Signal:
+	Sudo apt update
+	Sudo apt install signal-desktop
 }
 std_actions+=(Docker)
 actions+=(Docker)
