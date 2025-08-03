@@ -190,8 +190,8 @@ Pin-Priority: 1000
 
 actions+=(Paperless)
 Paperless() {
-	Docker
-	curl --location --silent --show-error -o /tmp/install-paperless-ngx.sh
+	docker version || (echo "Run '$0 docker' first"; exit 1)
+	curl --location --silent --show-error -o /tmp/install-paperless-ngx.sh https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/main/install-paperless-ngx.sh
 	bash /tmp/install-paperless-ngx.sh
 	rm -f /tmp/install-paperless-ngx.sh
 	# bash -c "$(curl --location --silent --show-error https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/main/install-paperless-ngx.sh)"
