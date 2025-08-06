@@ -25,11 +25,12 @@ Main(){
 	for action in "${actions[@]}"; do
 		case "${action}" in
 			Asdf) Asdf;;
+			Brave) Brave;;
 			Distro) Distro;;
 			Docker) Docker;;
-			Brave) Brave;;
 			Firefox) Firefox;;
 			Git) Git;;
+			Jack) Jack;;
 			Paperless) Paperless;;
 			Remote) Remote;;
 			Signal) Signal;;
@@ -186,6 +187,27 @@ Pin-Priority: 1000
 	Sudo apt-get update
 	Sudo apt-get install -y firefox firefox-esr
 
+}
+
+actions+=(Jack)
+Jack() {
+	local debs=(
+		cdparanoia
+		fdkaac
+		flac
+		icedax
+		lame
+		libdiscid-dev
+		vorbis-tools
+		# look up dagrab and tosha
+	)
+	Asdf
+	python -m venv ~/.venv-jack
+	Sudo apt-get update
+	Sudo apt-get -y install "${debs[@]}"
+	~/.venv-jack/bin/pip install git+https://github.com/jack-cli-cd-ripper/jack
+	mkdir -p ~/bin
+	ln -snf ~/.venv-jack/bin/jack ~/bin/
 }
 
 actions+=(Paperless)
