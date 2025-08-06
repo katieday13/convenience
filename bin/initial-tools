@@ -120,7 +120,7 @@ std_actions+=(Distro)
 actions+=(Distro)
 Distro(){
 	Sudo apt-get update
-	Sudo apt-get install -y lsscsi pandoc pass poppler-utils pwgen scsitools tomb uptimed uuid vim-nox
+	Sudo apt-get install -y lsscsi pandoc pass pipewire-jack pipewire-v4l2 poppler-utils pwgen scsitools tomb uptimed uuid vim-nox vlc-plugin-pipewire
 	Sudo update-alternatives --set vim /usr/bin/vim.nox
 	Sudo update-alternatives --set editor /usr/bin/vim.nox
 	PassUpdate
