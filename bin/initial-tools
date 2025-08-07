@@ -121,6 +121,7 @@ std_actions+=(Distro)
 actions+=(Distro)
 Distro(){
 	local debs=(
+		ffmpeg # For yt-dlp
 		lsscsi
 		pandoc 
 		pass 
@@ -132,9 +133,14 @@ Distro(){
 		screen
 		tmux
 		tomb 
-		uptimed 
-		uuid 
+		uptimed # Because of vanity
+		uuid
 		vim-nox 
+		vlc # For movies
+		# vlc-bin
+		# vlc-data
+		# vlc-l10n
+		# vlc-plugin-base
 		vlc-plugin-pipewire
 	)
 	Sudo apt-get update
