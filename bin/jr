@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e -u -o pipefail
+until jack -Q -k --encoder-name flac; do
+    echo "Failed $?:  Press enter when problem fixed.  'i' to ignore error.  Control-C to stop"
+    read d
+    case "$d" in
+	i) break;;
+	*) : ;;
+    esac
+done
+jack -k --query-if-needed
+jack -k --encoder-name lame --query-if-needed
+eject
