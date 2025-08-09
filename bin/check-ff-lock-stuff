@@ -4,6 +4,6 @@ set -x
 echo "Current locks matching patterns"
 sudo lslocks | grep -E '/(\.parentlock|lock)'
 echo '---'
-: ${FF_DIRS:=$HOME/.mozilla,$HOME/ff}
+: "${FF_DIRS:=$HOME/.mozilla,$HOME/ff}"
 IFS=", " read -r -a dirs <<< "$FF_DIRS"
-find  "${dirs[@]}" -name .parentlock -o -name lock -ls
+find  "${dirs[@]}" \( -name .parentlock -o -name lock \) -ls
