@@ -2,7 +2,7 @@
 set -e -u -o pipefail
 until jack -Q -k --encoder-name flac; do
     echo "Failed $?:  Press enter when problem fixed.  'i' to ignore error.  Control-C to stop"
-    read d
+    read -r d
     case "$d" in
 	i) break;;
 	*) : ;;
