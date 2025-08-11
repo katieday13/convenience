@@ -1,16 +1,22 @@
-#!/bin/bash
+#!/bin/busybox sh
 set -eux -o pipefail
+set | grep ^CRYPTTAB 1>&2
 export CRYPTTAB_KEY
+
 Main() {
-    local mnt interesting=() try
-    mnt=$(mktemp -d luXXXXXXXX)
-    readarray -t interesting < <(shopt -s nullglob; GetInteresting /dev/disk/by-id/usb*)
-    for usb in "${interesting[@]}"; do
-        # echo "$usb"
-        if mount "${usb}" "${mnt}"; then
-            if [ -r "${mnt}/${CRYPTTAB_KEY}.lek" ]; then
-                if cryptsetup 
-                cat "${mnt}/${CRYPTTAB_KEY}.lek"
+    local mnt try
+    mnt=$(mktemp -d /tmp/luXXXXXXXX)
+    for usb in $(GetInteresting /dev/disk/by-id/usb-*); do
+    :
+        # # echo "$usb"
+        if mount "${usb}" "${mnt}"
+        then
+            :
+            try="${mnt}/${CRYPTTAB_KEY}.lek"
+            if [ -r "${try}" ]
+            then
+                :
+                cat "${try}"
                 umount "${usb}"
                 exit 0
             fi
@@ -19,8 +25,9 @@ Main() {
     done
 }
 GetInteresting() {
-    blkid "$@" |
-    awk '/LABEL="VTOYEFI"/||/LABEL="Ventoy"/||/LABEL="USB_ENC_KEY"/{print substr($1, 1, length($1)-1)}'
+    blkid --match-type vfat,exfat "$@" | awk -F': ' '{print $1}'
+    # blkid "$@" |
+    # awk '/LABEL="VTOYEFI"/||/LABEL="Ventoy"/||/LABEL="USB_ENC_KEY"/{print substr($1, 1, length($1)-1)}'
 }
 Main "$@"
 exit 1
