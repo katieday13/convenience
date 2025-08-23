@@ -20,10 +20,10 @@ Main() {
     local hotleks=()
     readarray -t hotleks < <(GetHotLeks "$lukstgt" "${usbmounts[@]}")
     echo echo hotleks: "${hotleks[@]}"
-    local keyname
-    keyname=$(DoKeyStuff "$lukstgt" "${#hotleks[@]}" "${usbmounts[@]}")
-    echo keyname: "$keyname"
-    [ -n "$keyname" ]
+    local newlek
+    newlek=$(DoKeyStuff "$lukstgt" "${#hotleks[@]}" "${usbmounts[@]}")
+    echo keyname: "$newlek"
+    [ -n "$newlek" ]
     exit 0
 }
 GetUsb() {
@@ -60,6 +60,7 @@ GetHotLeks() {
     done
 }
 DoKeyStuff() {
+    # We want to refine and be able to force creating another key
     [ "$2" -gt 0 ] && return
     local luksdev="$1"
     shift
@@ -73,7 +74,7 @@ DoKeyStuff() {
     local kf="$mnt/$uuid.lek"
     dd if=/dev/random bs=1 count=256 of="$kf"
     cryptsetup luksAddKey  "$luksdev" "$kf"
-    echo "$uuid"
+    echo "$kf"
 }
 Main "$@"
 # shellcheck disable=SC2317
