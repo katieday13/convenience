@@ -1,6 +1,7 @@
 #!/bin/bash
 set -eux -o pipefail
 Main() {
+    if ! uuid > /dev/null; then echo "uuid not installed"; exit 1; fi
     local usbblk=()
     readarray -t usbblk < <(GetUsb)
     echo usb: "${usbblk[@]}"
@@ -22,6 +23,7 @@ Main() {
     local keyname
     keyname=$(DoKeyStuff "$lukstgt" "${#hotleks[@]}" "${usbmounts[@]}")
     echo keyname: "$keyname"
+    [ -n "$keyname" ]
     exit 0
 }
 GetUsb() {
@@ -63,6 +65,7 @@ DoKeyStuff() {
     shift
     shift
     local mnt
+    if [ "$#" -lt 1 ]; then return; fi
     echo "Which USB Mount should receive the key?" 1>&2
     select mnt in "$@"; do break; done
     local uuid
