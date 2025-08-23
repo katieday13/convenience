@@ -22,8 +22,8 @@ Main() {
     echo echo hotleks: "${hotleks[@]}"
     local newlek
     newlek=$(DoKeyStuff "$lukstgt" "${#hotleks[@]}" "${usbmounts[@]}")
-    echo keyname: "$newlek"
-    [ -n "$newlek" ]
+    luksuuid=$(GetLuksUUID "$lukstgt")
+    
     exit 0
 }
 GetUsb() {
@@ -73,8 +73,12 @@ DoKeyStuff() {
     uuid=$(uuid)
     local kf="$mnt/$uuid.lek"
     dd if=/dev/random bs=1 count=256 of="$kf"
+    # We want a little bit of retry on this
     cryptsetup luksAddKey  "$luksdev" "$kf"
     echo "$kf"
+}
+GetLuksUUID() {
+    cryptsetup luksDump "$1" | awk '$1=="UUID:"{print $2;exit}'
 }
 Main "$@"
 # shellcheck disable=SC2317
