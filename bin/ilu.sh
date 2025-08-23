@@ -23,7 +23,7 @@ Main() {
     local newlek
     newlek=$(DoKeyStuff "$lukstgt" "${#hotleks[@]}" "${usbmounts[@]}")
     luksuuid=$(GetLuksUUID "$lukstgt")
-    
+    keylek=$(GetKeyLek "$newlek" "${hotleks[@]}")
     exit 0
 }
 GetUsb() {
@@ -79,6 +79,20 @@ DoKeyStuff() {
 }
 GetLuksUUID() {
     cryptsetup luksDump "$1" | awk '$1=="UUID:"{print $2;exit}'
+}
+
+GetKeyLek() {
+    if [[ -z "$1" ]]; then
+    shift
+    fi
+    if [[ "$#" == 1 ]]; then
+    echo "$1"
+    return
+    fi
+    echo "Which key for /etc/crypttab"
+    local key
+    select key in "$@"; do break; done
+    echo "$key"
 }
 Main "$@"
 # shellcheck disable=SC2317
