@@ -25,6 +25,7 @@ Main(){
 	for action in "${actions[@]}"; do
 		case "${action}" in
 			Asdf) Asdf;;
+			Android) Android;;
 			Brave) Brave;;
 			Distro) Distro;;
 			Docker) Docker;;
@@ -116,6 +117,17 @@ Asdf(){
 		asdf install ${line:+${line}}
 		asdf global ${line:+${line}}
 	done
+}
+std_actions+=(Android)
+actions+=(Android)
+Android(){
+	local debs=(
+		adb
+	)
+	Sudo apt-get update
+	Sudo apt-get install -y "${debs[@]}"
+	PassUpdate
+	# Brave
 }
 std_actions+=(Distro)
 actions+=(Distro)
