@@ -142,6 +142,7 @@ Distro(){
 		# vlc-l10n
 		# vlc-plugin-base
 		vlc-plugin-pipewire
+		xkcdpass
 	)
 	Sudo apt-get update
 	Sudo apt-get install -y "${debs[@]}"
