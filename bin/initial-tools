@@ -73,6 +73,7 @@ Asdf(){
 		'libssl-dev'
 		'lzma'
 		'lzma-dev'
+		'sqlite3'
 		'strace'
 		'tk-dev'
 		'uuid-dev'
