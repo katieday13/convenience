@@ -17,14 +17,14 @@ Docker() {
 	fi
 	# https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user
 	local groups
-	groups=$(sudo "$LOGNAME" id --groups --name)
+	groups=$(sudo -u "$LOGNAME" id --groups --name)
 	if [ "$groups" == "${groups##* docker }" ]; then
 		sudo adduser "$LOGNAME" docker
 	fi
 }
 
 WgEasy() {
-	local dir="${WGE_CDIR/wg-easy}"
+	local dir="${WGE_CDIR}/wg-easy"
 	sudo mkdir --parents "$dir"
 	sudo tee "$dir/docker-compose.yml" > /dev/null << EEOOTT
 # Original from https://raw.githubusercontent.com/wg-easy/wg-easy/master/docker-compose.yml
@@ -37,7 +37,7 @@ services:
     #  Optional:
     #  - PORT=51821
     #  - HOST=0.0.0.0
-      - INSECURE=false
+      - INSECURE=true
       - WGE_PH=dummy
 
     image: ghcr.io/wg-easy/wg-easy:15
@@ -74,7 +74,7 @@ networks:
         - subnet: 10.42.42.0/24
         - subnet: fdcc:ad94:bacf:61a3::/64
 EEOOTT
-	(cd "$dir/wg-easy" && docker-compose up --detach --wait)
+	(cd "$dir" && sudo -u "$LOGNAME" docker compose up --detach --wait)
 }
 
 # shellcheck disable=SC2317 # This is a persistent NFS catch-al
