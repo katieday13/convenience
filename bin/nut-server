@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e -u -o pipefail
+set -x
+Main() {
+	sudo env DEBIAN_FRONTEND=noninteractive apt install nut-server
+	exit 0
+}
+# shellcheck disable=SC2317  # Old persistent script on NFS trick
+Main "$@" && exit 1
