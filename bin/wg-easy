@@ -12,14 +12,20 @@ Main() {
 	exit 0
 }
 Docker() {
-	curl -sSL https://get.docker.com | sh
+	if ! [ -x /usr/bin/docker ]; then
+		curl -sSL https://get.docker.com | sh
+	fi
 	# https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user
-	sudo adduser "$LOGNAME" docker
+	local groups
+	groups=$(sudo "$LOGNAME" id --groups --name)
+	if [ "$groups" == "${groups##* docker }" ]; then
+		sudo adduser "$LOGNAME" docker
+	fi
 }
 
 WgEasy() {
 	local dir="${WGE_CDIR/wg-easy}"
-	mkdir --parents "$dir"
+	sudo mkdir --parents "$dir"
 	cat > "$dir/docker-compose.yml" << EEOOTT
 # Original from https://raw.githubusercontent.com/wg-easy/wg-easy/master/docker-compose.yml
 volumes:
