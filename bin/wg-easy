@@ -26,7 +26,7 @@ Docker() {
 WgEasy() {
 	local dir="${WGE_CDIR/wg-easy}"
 	sudo mkdir --parents "$dir"
-	cat > "$dir/docker-compose.yml" << EEOOTT
+	sudo tee "$dir/docker-compose.yml" > /dev/null << EEOOTT
 # Original from https://raw.githubusercontent.com/wg-easy/wg-easy/master/docker-compose.yml
 volumes:
   etc_wireguard:
