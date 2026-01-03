@@ -1,0 +1,18 @@
+#!/bin/bash
+# Script to install wg-easy with INSECURE config
+# https://wg-easy.github.io/wg-easy/latest/examples/tutorials/basic-installation/
+# https://wg-easy.github.io/wg-easy/latest/examples/tutorials/reverse-proxyless/
+# TODO revise to use https://github.com/lucaslorentz/caddy-docker-proxy
+set -e -u -o pipefail
+set -x
+: "${WGE_CDIR:=/etc/docker/containers}"
+Main() {
+	Docker
+	exit 0
+}
+Docker() {
+	curl -sSL https://get.docker.com | sh
+}
+
+# shellcheck disable=SC2317 # This is a persistent NFS catch-al
+Main "$@" && exit 1
