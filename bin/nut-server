@@ -2,7 +2,19 @@
 set -e -u -o pipefail
 set -x
 Main() {
-	sudo env DEBIAN_FRONTEND=noninteractive apt install nut-server
+	sudo env DEBIAN_FRONTEND=noninteractive apt install -y nut-server
+	if ! [ -d /etc/nut.orig ]; then
+		sudo cp -pr /etc/nut/. /etc/nut.orig/
+	fi
+	sudo nut-scanner | grep -v -E '(bus|device|busport) ='| sudo tee /etc/nut/ups.conf
+	sudo tee /etc/nut/upsd.conf << EEOOTT
+# In case there are no UPSes attached
+ALLOW_NO_DEVICE true
+# Just let everyone on the network listen
+LISTEN 0.0.0.0 3493
+# And don't bother with certs (bad idea but...)
+CERTREQUEST 0
+EEOOTT
 	exit 0
 }
 # shellcheck disable=SC2317  # Old persistent script on NFS trick
