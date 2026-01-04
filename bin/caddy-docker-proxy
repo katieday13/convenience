@@ -1,0 +1,57 @@
+#!/bin/bash
+# Script to install caddy-docker-proxy per https://github.com/lucaslorentz/caddy-docker-proxy
+# TODO maybe update wg-easy to use it
+set -e -u -o pipefail
+set -x
+: "${CDP_CDIR:=/etc/docker/containers}"
+Main() {
+	Docker
+	CaddyDockerProxy
+	exit 0
+}
+Docker() {
+	if ! [ -x /usr/bin/docker ]; then
+		curl -sSL https://get.docker.com | sh
+	fi
+	# https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user
+	local groups
+	groups=$(sudo -u "$LOGNAME" id --groups --name)
+	if [ "$groups" == "${groups##* docker }" ]; then
+		sudo adduser "$LOGNAME" docker
+	fi
+}
+
+CaddyDockerProxy() {
+	local dir="${CDP_CDIR}/caddy-docker-proxy"
+	sudo mkdir --parents "$dir"
+	sudo docker network create caddy
+	sudo tee "$dir/docker-compose.yml" > /dev/null << EEOOTT
+# Original from https://github.com/lucaslorentz/caddy-docker-proxy
+services:
+  caddy:
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    ports:
+      - 80:80
+      - 443:443/tcp
+      - 443:443/udp
+    environment:
+      - CADDY_INGRESS_NETWORKS=caddy
+    networks:
+      - caddy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - caddy_data:/data
+    restart: unless-stopped
+
+networks:
+  caddy:
+    external: true
+
+volumes:
+  caddy_data: {}
+EEOOTT
+	(cd "$dir" && sudo -u "$LOGNAME" docker compose up --detach --wait)
+}
+
+# shellcheck disable=SC2317 # This is a persistent NFS catch-al
+Main "$@" && exit 1
