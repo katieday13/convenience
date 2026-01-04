@@ -1,0 +1,48 @@
+#!/bin/bash
+set -e -u -o pipefail
+set -x
+Main() {
+	: "${NUT_ADMIN:=$(echo "admin $HOSTNAME" | md5sum | awk '{print $1}')}"
+	: "${NUT_MON:=$(echo "mon $HOSTNAME" | md5sum | awk '{print $1}')}"
+	: "${NUT_FINALDELAY:=180}"
+	sudo env DEBIAN_FRONTEND=noninteractive apt install -y nut-server
+	if ! [ -d /etc/nut.orig ]; then
+		sudo cp -pr /etc/nut/. /etc/nut.orig/
+	fi
+	sudo nut-scanner | grep -v -E '(bus|device|busport) ='| sudo tee /etc/nut/ups.conf
+	sudo tee /etc/nut/upsd.conf << EEOOTT
+# Just let everyone on the network listen
+LISTEN 0.0.0.0 3493
+# And don't bother with certs (bad idea but...)
+CERTREQUEST 0
+EEOOTT
+	: 
+
+	sudo tee /etc/nut/upsd.users << EEOOTT
+[admin]
+	password = $NUT_ADMIN
+	actions = SET
+	instcmds = ALL
+	upsmon primary
+[secmonuser]
+	password = $NUT_MON
+	upsmon secondary
+EEOOTT
+	:
+	sudo tee /etc/nut/upsmon.conf << EEOOTT
+MONITOR nutdev1@localhost 1 admin $NUT_ADMIN primary
+FINALDELAY $NUT_FINALDELAY
+EEOOTT
+	:
+	sudo tee /etc/nut/nut.conf << EEOOTT
+MODE=netserver
+ALLOW_NODEVICE=true
+export ALLOW_NO_DEVICE
+EEOOTT
+	:
+	sudo systemctl restart nut-server nut-monitor
+	sudo systemctl enable nut-server nut-monitor
+	exit 0
+}
+# shellcheck disable=SC2317  # Old persistent script on NFS trick
+Main "$@" && exit 1
