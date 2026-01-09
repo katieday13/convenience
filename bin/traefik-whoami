@@ -3,10 +3,11 @@
 # TODO maybe update wg-easy to use it
 set -e -u -o pipefail
 set -x
-: "${CDP_CDIR:=/etc/docker/containers}"
+: "${CDIR:=/etc/docker/containers}"
+: "${EXT_HOSTNAME:=${1:-whoami.example.com}}"
 Main() {
 	Docker
-	CaddyDockerProxy
+	TraefikWhoami
 	exit 0
 }
 Docker() {
@@ -21,38 +22,29 @@ Docker() {
 	fi
 }
 
-CaddyDockerProxy() {
-	local dir="${CDP_CDIR}/caddy-docker-proxy"
+TraefikWhoami() {
+	local dir="${CDIR}/traefik-whoami"
 	sudo mkdir --parents "$dir"
 	sudo docker network create caddy
 	sudo tee "$dir/docker-compose.yml" > /dev/null << EEOOTT
 # Original from https://github.com/lucaslorentz/caddy-docker-proxy
+# The whoami example
 services:
-  caddy:
-    image: lucaslorentz/caddy-docker-proxy:ci-alpine
-    ports:
-      - 80:80
-      - 443:443/tcp
-      - 443:443/udp
-    environment:
-      - CADDY_INGRESS_NETWORKS=caddy
+  whoami:
+    image: traefik/whoami
     networks:
       - caddy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - caddy_data:/data
-    restart: unless-stopped
+    labels:
+      caddy: $EXT_HOSTNAME
+      caddy.reverse_proxy: "{{upstreams 80}}"
 
 networks:
   caddy:
     external: true
-
-volumes:
-  caddy_data: {}
 EEOOTT
 	(cd "$dir" && sudo -u "$LOGNAME" docker compose up --detach --wait)
 }
 
-Main "$@"
+Main "$@" 
 # shellcheck disable=SC2317 # This is a persistent NFS catch-al
 exit 1
