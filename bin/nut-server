@@ -44,5 +44,6 @@ EEOOTT
 	sudo systemctl enable nut-server nut-monitor
 	exit 0
 }
+Main "$@"
 # shellcheck disable=SC2317  # Old persistent script on NFS trick
-Main "$@" && exit 1
+exit 1

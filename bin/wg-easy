@@ -77,5 +77,6 @@ EEOOTT
 	(cd "$dir" && sudo -u "$LOGNAME" docker compose up --detach --wait)
 }
 
+Main "$@"
 # shellcheck disable=SC2317 # This is a persistent NFS catch-al
-Main "$@" && exit 1
+exit 1
