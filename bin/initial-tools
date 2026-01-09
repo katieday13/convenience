@@ -9,14 +9,33 @@ initial_pkgs=(
 	nvme-cli
 	smartmontools
 )
-remaining_pkgs=()
+: "${C_REPO:=https://github.com/katieday13/convenience}"
+: "${C_DIR:=${SUDO_HOME:-$HOME}/convenience}"
 Main() {
+	if [[ "$EUID" != 0 ]]; then
+		echo "Sorry, gotta run this as root" 1>&2
+		exit 1
+	fi
 	Initial
+	Convenience
 	exit 0
 }
 Initial() {
 	apt update -y
 	apt install -y "${initial_pkgs[@]}"
+}
+Convenience() {
+	if [ -n "${C_SKIP:-}" ]; then
+		echo "Skipping convenience repo" 1>&2
+		exit 1
+	fi
+
+	if ! git clone "${C_REPO}" "${C_DIR}"; then
+		cd "${C_DIR}" && git pull
+	fi
+	if [ -n "${SUDO_USER:-}" ]; then
+		chown --no-dereference --recursive "${SUDO_UID}:${SUDO_GID}" "${C_DIR}"
+	fi
 }
 Main "$@"
 # shellcheck disable=SC2317
