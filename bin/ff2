@@ -27,7 +27,7 @@ Main() {
 	: "${BROWSER_PROFILE_BASE:=}"
 
 	if [ -n "${BROWSER_PROFILE}" ]; then
-		"${BROWSER}" -CreateProfile "${BROWSER_PROFILE}"
+		"${BROWSER}" -no-remote -CreateProfile "${BROWSER_PROFILE}"
 		if [ -n "${BROWSER_PROFILE_BASE}" ]; then
 			InstallProfileBase "${BROWSER_PROFILE}" "${BROWSER_PROFILE_BASE}"
 		fi
