@@ -1,0 +1,25 @@
+#!/bin/bash
+# Mooched from https://stackoverflow.com/questions/10175812/how-can-i-generate-a-self-signed-ssl-certificate-using-openssl
+# # Source - https://stackoverflow.com/a
+# # Posted by vog, modified by community. See post 'Timeline' for change history
+# # Retrieved 2026-01-24, License - CC BY-SA 4.0
+# 
+# openssl req -x509 -newkey ed25519 -days 3650 \
+#   -noenc -keyout example.com.key -out example.com.crt -subj "/CN=example.com" \
+#   -addext "subjectAltName=DNS:example.com,DNS:*.example.com,IP:10.0.0.1"
+
+set -e -u -o pipefail
+set -x
+: "${COMMONNAME:=${1:-localhost}}"
+: "${SUBJECTALTNAME:=${2:-}}"
+: "${DAYS:=${3:-365}}"
+Main() {
+	#mkdir -p "$COMMONNAME"
+	openssl req -x509 -newkey ed25519 -days "${DAYS}" \
+		-noenc -keyout "${COMMONNAME}.key" -out "${COMMONNAME}.crt" -subj "/CN=${COMMONNAME}" \
+		${SUBJECTALTNAME:+-addext "subjectAltName=${SUBJECTALTNAME}"}
+	exit 0
+}
+Main "$@"
+# shellcheck disable=SC2317 # This is as it should be
+exit 1
