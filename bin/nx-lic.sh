@@ -17,7 +17,9 @@ NoDocker() {
 	echo "NoDocker"
 	head -1 /proc/1/sched
 	: "${NXLICDIR:=/usr/NX/etc}"
-	docker run --rm -i -t -v "$zerodir:/script:ro" -v ".:/work:ro" -v "$NXLICDIR:/nxout" --workdir /work debian:latest "/script/${zero##*/}" "$@"
+	tarballdir="${1%/*}"
+	tarball="${1##*/}"
+	docker run --rm --interactive=false --tty=false --volume "$zerodir:/script:ro" -v "$tarballdir:/work:ro" -v "$NXLICDIR:/nxout" --workdir /work debian:latest "/script/${zero##*/}" "$tarball"
 }
 Docker() {
 	echo "Docker"

@@ -1,0 +1,9 @@
+[Unit]
+Description=NoMachine License Cheat
+Wants=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/katieday13/convenience/bin/nx-lic.sh %h/Downloads/nomachine-small-business-terminal-server_9.1.24_6_x86_64.tar.gz
+
+
