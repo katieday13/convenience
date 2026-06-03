@@ -54,10 +54,10 @@ set -x
 Main() {
     local pool function pause end interval now due
     now=$(date +%s)
-    zpool status -j -p | jq -r '.pools[] | [.name, .scan_stats.function, .scan_stats.end_time, .scan_stats.scrub_pause ] | @tsv' | sort -n -k3,4
+    zpool status -j -p | jq -r '.pools[] | [.name, .scan_stats.function, .scan_stats.end_time, .scan_stats.scrub_pause ] | @tsv' | sort -n -k3,4 |
     while read -r pool function end pause; do
-        interval=$(zpool get custom:scrub_interval "$pool")
-	: "${interval:=2419200}"
+        # interval=$(zpool get -H custom:scrub_interval "$pool")
+	interval=2419200
 	((due=end+interval))
         if [[ "$pause" == 0 ]] && [[ "$end" == 0 ]]; then
 	    echo "Exiting because $function in progress on $pool"
@@ -67,7 +67,11 @@ Main() {
 	elif [[ "$now" -gt "$due" ]]; then
 	   echo "Starting scrub on $pool because past time for a scrub"
 	   zpool scrub "$pool"
+        else
+           echo "Nothing $pool"
+           continue
         fi
+        break
     done
 }
 Main "$@"
